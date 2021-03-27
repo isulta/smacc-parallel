@@ -98,7 +98,7 @@ def create_core_catalog_mevolved(writeOutputFlag=True, useLocalHost=True, save_c
                 idx1, data = intersect1d_parallel(comm, rank, root, (cc['core_tag'][satellites_mask] if rank==root else None), cc_prev['core_tag'], dtypes_cc_all['core_tag'], cc_prev[m_evolved_col(A, zeta, next=True)], dtypes_cc_all['infall_tree_node_mass'])
                 if rank == root:
                     cc[m_evolved_col(A, zeta)][ np.flatnonzero(satellites_mask)[idx1] ] = data
-                printr(f'Found {len(idx1)} satellite core_tag matches in cc_prev.', root)
+                printr(f'Found {len(idx1) if rank==root else None} satellite core_tag matches in cc_prev.', root)
                 comm.Barrier()
                 
                 # Find host halo mass M for satellites.

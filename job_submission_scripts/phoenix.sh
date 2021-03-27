@@ -3,7 +3,7 @@
 #SBATCH -p debug
 #SBATCH -N 8 # number of nodes
 #SBATCH -n 128 # number of cores
-#SBATCH -t 0-10:00 # time (D-HH:MM)
+#SBATCH -t 2-00:00 # time (D-HH:MM)
 #SBATCH -o slurm.%N.%j.out # STDOUT
 #SBATCH -e slurm.%N.%j.err # STDERR
 
