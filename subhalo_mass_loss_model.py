@@ -12,6 +12,13 @@ cc_input_template = '/cosmo/scratch/rangel/Farpoint/core_properties/*.coreproper
 cc_output_dir = '/cosmo/scratch/isultan/Farpoint/output'
 AFID = 1.1
 ZETAFID = 0.1
+
+writeOutputFlag = True
+useLocalHost = True
+save_cc_prev = True
+
+resume_dir = '/cosmo/scratch/isultan/Farpoint/output/output_19374'
+resume_step = 50 # set None if SMACC should start from first step
 ### END PARAMS ###
 
 import numpy as np

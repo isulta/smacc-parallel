@@ -10,13 +10,8 @@ import os
 import time
 import pygio
 
-cc_data_dir = SHMLM.cc_data_dir
-cc_output_dir = SHMLM.cc_output_dir
-
 A, zeta = SHMLM.AFID, SHMLM.ZETAFID
-
 steps = SHMLM.steps
-cc_input_list = SHMLM.cc_input_list
 
 vars_cc_all = [
     'fof_halo_tag',
@@ -61,19 +56,19 @@ def m_evolved_col(A, zeta, next=False):
     else:
         return 'm_evolved_{}_{}'.format(A, zeta)
 
-def create_core_catalog_mevolved(writeOutputFlag=True, useLocalHost=True, save_cc_prev=True):
+def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev):
     '''
     Appends mevolved to core catalog and saves output in HDF5 format.
     '''
     if writeOutputFlag:
-        printr(f'Reading data from {cc_data_dir} and writing output to {cc_output_dir}.')
+        printr(f'Reading data from {SHMLM.cc_data_dir} and writing output to {SHMLM.cc_output_dir}.')
     
     cc = {}
     cc_prev = {}
     M = None
     Mlocal = None
 
-    for step, fn_cc_input in zip(steps, cc_input_list):
+    for step, fn_cc_input in zip(steps, SHMLM.cc_input_list):
         # Read in cc for step
         printr(f'Beginning step {step} (step {steps.index(step)+1} of {len(steps)}). Reading GIO core catalog...'); start_step = time.time()
         cc = pygio.read_genericio(fn_cc_input, vars_cc(step))
@@ -126,7 +121,7 @@ def create_core_catalog_mevolved(writeOutputFlag=True, useLocalHost=True, save_c
             printr(f'Finished SHMLM (new satellites) in {time.time()-start} seconds.')
         if writeOutputFlag:
             # Write cc to disk
-            fn = os.path.join(cc_output_dir, f'{step}.corepropertiesextend.hdf5')
+            fn = os.path.join(SHMLM.cc_output_dir, f'{step}.corepropertiesextend.hdf5')
             printr(f'Writing cc to {fn}...'); start=time.time()
             h5_write_dict_parallel(comm, rank, cc, vars_cc(step), dtypes_cc_all, fn)
             printr(f'Finished writing cc to disk in {time.time()-start} seconds.')
@@ -147,10 +142,10 @@ def create_core_catalog_mevolved(writeOutputFlag=True, useLocalHost=True, save_c
                 printr(f'Finished SHMLM (next step) in {time.time()-start} seconds.')
             if save_cc_prev:
                 printr('Writing ccprev hdf5...'); start=time.time()
-                h5_write_dict( os.path.join(cc_output_dir, f'{step}.{rank}.ccprev.hdf5'), cc_prev, 'ccprev' )
+                h5_write_dict( os.path.join(SHMLM.cc_output_dir, f'{step}.{rank}.ccprev.hdf5'), cc_prev, 'ccprev' )
                 printr(f'Finished writing ccprev hdf5 in {time.time()-start} seconds.')
         
         printr(f'Finished step {step} in {time.time()-start_step} seconds.\n')
 
 if __name__ == '__main__':
-    create_core_catalog_mevolved()
+    create_core_catalog_mevolved(SHMLM.writeOutputFlag, SHMLM.useLocalHost, SHMLM.save_cc_prev)
