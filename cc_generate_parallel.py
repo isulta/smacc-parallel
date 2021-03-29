@@ -75,7 +75,7 @@ def create_core_catalog_mevolved(writeOutputFlag=True, useLocalHost=True, save_c
 
     for step, fn_cc_input in zip(steps, cc_input_list):
         # Read in cc for step
-        printr(f'Beginning step {step}. Reading GIO core catalog...'); start_step = time.time()
+        printr(f'Beginning step {step} (step {steps.index(step)+1} of {len(steps)}). Reading GIO core catalog...'); start_step = time.time()
         cc = pygio.read_genericio(fn_cc_input, vars_cc(step))
         printr(f'Finished reading GIO core catalog in {time.time()-start_step} seconds.')
 
