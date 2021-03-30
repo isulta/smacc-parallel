@@ -17,8 +17,12 @@ writeOutputFlag = True
 useLocalHost = True
 save_cc_prev = True
 
+resume_smacc = False
 resume_dir = '/cosmo/scratch/isultan/Farpoint/output/output_19374'
-resume_step = 50 # set None if SMACC should start from first step
+resume_step = 50
+# SMACC will start from step `resume_step` if `resume_smacc` is True. SMACC will start from the first step otherwise.
+# `resume_dir` must contain resume-files N.*.ccprev.hdf5 for step N which immediately precedes step `resume_step`.
+# The resume-files must have been written with the same number of ranks/machine topology as the current run.
 ### END PARAMS ###
 
 import numpy as np

@@ -5,7 +5,7 @@ ranks = comm.Get_size()
 
 import numpy as np
 import subhalo_mass_loss_model as SHMLM
-from itk import intersect1d_parallel, many_to_one_parallel, h5_write_dict_parallel, h5_write_dict
+from itk import intersect1d_parallel, many_to_one_parallel, h5_write_dict_parallel, h5_write_dict, h5_read_dict
 import os
 import time
 import pygio
@@ -56,7 +56,7 @@ def m_evolved_col(A, zeta, next=False):
     else:
         return 'm_evolved_{}_{}'.format(A, zeta)
 
-def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev):
+def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, resume_smacc):
     '''
     Appends mevolved to core catalog and saves output in HDF5 format.
     '''
@@ -69,6 +69,18 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev):
     Mlocal = None
 
     for step, fn_cc_input in zip(steps, SHMLM.cc_input_list):
+        # Resume SMACC at step `SHMLM.resume_step` if `resume_smacc`==True
+        if resume_smacc:
+            if step < SHMLM.resume_step:
+                printr(f'Skipping step {step} (SMACC will resume at step {SHMLM.resume_step}).')
+                continue
+            elif step == SHMLM.resume_step:
+                # Read resume-files from previous step
+                fn_prev = os.path.join(SHMLM.resume_dir, f'{steps[steps.index(step)-1]}.{rank}.ccprev.hdf5')
+                printr(f'Reading ccprev {fn_prev}...'); start=time.time()
+                cc_prev = h5_read_dict(fn_prev, 'ccprev')
+                printr(f'Finished reading ccprev hdf5 in {time.time()-start} seconds.')
+
         # Read in cc for step
         printr(f'Beginning step {step} (step {steps.index(step)+1} of {len(steps)}). Reading GIO core catalog...'); start_step = time.time()
         cc = pygio.read_genericio(fn_cc_input, vars_cc(step))
@@ -148,4 +160,4 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev):
         printr(f'Finished step {step} in {time.time()-start_step} seconds.\n')
 
 if __name__ == '__main__':
-    create_core_catalog_mevolved(SHMLM.writeOutputFlag, SHMLM.useLocalHost, SHMLM.save_cc_prev)
+    create_core_catalog_mevolved(SHMLM.writeOutputFlag, SHMLM.useLocalHost, SHMLM.save_cc_prev, SHMLM.resume_smacc)
