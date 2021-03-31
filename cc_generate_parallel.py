@@ -141,17 +141,17 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
 
        # Compute m_evolved of satellites according to SHMLModel for NEXT time step and save as cc_prev['next_m_evolved'] in memory.
         if step != steps[-1]:
-            cc_prev = { 'core_tag':cc['core_tag'].copy() }
-            cc_prev[m_evolved_col(A, zeta, next=True)] = np.zeros_like(cc['infall_tree_node_mass'])
+            cc_prev = { 'core_tag':cc['core_tag'][satellites_mask].copy() }
+            cc_prev[m_evolved_col(A, zeta, next=True)] = np.zeros(np.sum(satellites_mask), dtype=dtypes_cc_all['infall_tree_node_mass'])
 
             if numSatellites != 0: # If there are satellites (not applicable for first step)
                 printr('SHMLM (next step)...'); start=time.time()
                 m = cc[m_evolved_col(A, zeta)][satellites_mask]
                 if useLocalHost:
                     M_A_zeta = (Mlocal==0)*M + (Mlocal!=0)*Mlocal
-                    cc_prev[m_evolved_col(A, zeta, next=True)][satellites_mask] = SHMLM.m_evolved(m0=m, M0=M_A_zeta, step=steps[steps.index(step)+1], step_prev=step, A=A, zeta=zeta)
+                    cc_prev[m_evolved_col(A, zeta, next=True)] = SHMLM.m_evolved(m0=m, M0=M_A_zeta, step=steps[steps.index(step)+1], step_prev=step, A=A, zeta=zeta)
                 else:
-                    cc_prev[m_evolved_col(A, zeta, next=True)][satellites_mask] = SHMLM.m_evolved(m0=m, M0=M, step=steps[steps.index(step)+1], step_prev=step, A=A, zeta=zeta)
+                    cc_prev[m_evolved_col(A, zeta, next=True)] = SHMLM.m_evolved(m0=m, M0=M, step=steps[steps.index(step)+1], step_prev=step, A=A, zeta=zeta)
                 printr(f'Finished SHMLM (next step) in {time.time()-start} seconds.')
             if save_cc_prev:
                 printr('Writing ccprev hdf5...'); start=time.time()
