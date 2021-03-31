@@ -100,8 +100,8 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
 
         # If there are satellites (not applicable for first step)
         if numSatellites != 0:
-            printr('cc_prev m_evolved matching and M for all ranks...'); start=time.time()
-
+            # Set m_evolved of all satellites that have core_tag match on prev step to next_m_evolved of prev step.
+            printr('cc_prev m_evolved matching for all ranks...'); start=time.time()
             # cc_prev m_evolved matching on local rank first
             _, idx1_local, idx2_local = np.intersect1d( cc['core_tag'][satellites_mask], cc_prev['core_tag'], return_indices=True )
             cc[m_evolved_col(A, zeta)][ np.flatnonzero(satellites_mask)[idx1_local] ] = cc_prev[m_evolved_col(A, zeta, next=True)][idx2_local]
@@ -111,7 +111,6 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
             unmatched_satellites_idx = np.flatnonzero(satellites_mask)[unmatched_satellites_idx]
 
             for root in range(ranks):
-                # Set m_evolved of all satellites that have core_tag match on prev step to next_m_evolved of prev step.
                 idx1, data = intersect1d_parallel(comm, rank, root,
                                                     ( cc['core_tag'][unmatched_satellites_idx] if rank==root else None ), 
                                                     ( cc_prev['core_tag'] if rank!=root else np.array([], dtype=dtypes_cc_all['core_tag']) ), 
@@ -122,13 +121,16 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
                     cc[m_evolved_col(A, zeta)][ unmatched_satellites_idx[idx1] ] = data
                 printr(f'Found {len(idx1) if rank==root else None} satellite core_tag matches in cc_prev.', root)
                 comm.Barrier()
-                
-                # Find host halo mass M for satellites.
+            printr(f'Finished cc_prev m_evolved matching for all ranks in {time.time()-start} seconds.')
+
+            # Find host halo mass M for satellites.
+            printr('Finding M for all ranks...'); start=time.time()
+            for root in range(ranks):
                 Data = many_to_one_parallel(comm, rank, root, (cc['tree_node_index'][satellites_mask] if rank==root else None), cc['tree_node_index'][centrals_mask], dtypes_cc_all['tree_node_index'], cc['infall_tree_node_mass'][centrals_mask], dtypes_cc_all['infall_tree_node_mass'])
                 if rank == root:
                     M = Data.copy()
                 comm.Barrier()
-            printr(f'Finished cc_prev m_evolved matching and M for all ranks in {time.time()-start} seconds.')
+            printr(f'Finished finding M for all ranks in {time.time()-start} seconds.')
             
             # Find parent halo mass Mlocal for satellites.
             if (step != steps[-1]) and useLocalHost:
