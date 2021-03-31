@@ -7,7 +7,7 @@ import itk
 from astropy.cosmology import FlatLambdaCDM
 
 # Load input parameters from `input_params.yaml`
-with open('input_params.yaml', 'r') as f:
+with open( os.path.join(os.path.dirname(__file__), 'input_params.yaml'), 'r' ) as f:
     INPUTPARAMS = yaml.safe_load(f)
 
 SIMNAME = INPUTPARAMS['SIMNAME']
