@@ -67,6 +67,7 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
     cc_prev = {}
     M = None
     Mlocal = None
+    dtypes_cc_all[m_evolved_col(A, zeta)] = dtypes_cc_all['infall_tree_node_mass']
 
     for step, fn_cc_input in zip(steps, SHMLM.cc_input_list):
         # Resume SMACC at step `SHMLM.resume_step` if `resume_smacc`==True
@@ -135,7 +136,7 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
             # Write cc to disk
             fn = os.path.join(SHMLM.cc_output_dir, f'{step}.corepropertiesextend.hdf5')
             printr(f'Writing cc to {fn}...'); start=time.time()
-            h5_write_dict_parallel(comm, rank, cc, vars_cc(step), dtypes_cc_all, fn)
+            h5_write_dict_parallel(comm, rank, cc, sorted(list(cc.keys())), dtypes_cc_all, fn)
             printr(f'Finished writing cc to disk in {time.time()-start} seconds.')
 
        # Compute m_evolved of satellites according to SHMLModel for NEXT time step and save as cc_prev['next_m_evolved'] in memory.
