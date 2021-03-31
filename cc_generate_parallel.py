@@ -5,7 +5,7 @@ ranks = comm.Get_size()
 
 import numpy as np
 import subhalo_mass_loss_model as SHMLM
-from itk import intersect1d_parallel, many_to_one_parallel, h5_write_dict_parallel, h5_write_dict, h5_read_dict
+from itk import intersect1d_parallel, many_to_one_parallel, many_to_one, h5_write_dict_parallel, h5_write_dict, h5_read_dict
 import os
 import time
 import pygio
@@ -125,10 +125,23 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
 
             # Find host halo mass M for satellites.
             printr('Finding M for all ranks...'); start=time.time()
+            M = np.zeros(np.sum(satellites_mask), dtype=dtypes_cc_all['infall_tree_node_mass'])
+            # Match on local rank first
+            isin_local = np.isin(cc['tree_node_index'][satellites_mask], cc['tree_node_index'][centrals_mask])
+            isin_local_c = np.isin(cc['tree_node_index'][centrals_mask], cc['tree_node_index'][satellites_mask][isin_local])
+            if np.any(isin_local):
+                idx_m21_local = many_to_one( cc['tree_node_index'][satellites_mask][isin_local], cc['tree_node_index'][centrals_mask][isin_local_c], assert_x0_unique=True, assert_x1_in_x0=False )
+                M[isin_local] = cc['infall_tree_node_mass'][centrals_mask][isin_local_c][idx_m21_local]
+
             for root in range(ranks):
-                Data = many_to_one_parallel(comm, rank, root, (cc['tree_node_index'][satellites_mask] if rank==root else None), cc['tree_node_index'][centrals_mask], dtypes_cc_all['tree_node_index'], cc['infall_tree_node_mass'][centrals_mask], dtypes_cc_all['infall_tree_node_mass'])
+                Data = many_to_one_parallel(comm, rank, root, 
+                                            ( cc['tree_node_index'][satellites_mask][~isin_local] if rank==root else None ), 
+                                            ( cc['tree_node_index'][centrals_mask][~isin_local_c] if rank!=root else np.array([], dtype=dtypes_cc_all['tree_node_index']) ), 
+                                            dtypes_cc_all['tree_node_index'], 
+                                            ( cc['infall_tree_node_mass'][centrals_mask][~isin_local_c] if rank!=root else np.array([], dtype=dtypes_cc_all['infall_tree_node_mass']) ), 
+                                            dtypes_cc_all['infall_tree_node_mass'])
                 if rank == root:
-                    M = Data.copy()
+                    M[~isin_local] = Data.copy()
                 comm.Barrier()
             printr(f'Finished finding M for all ranks in {time.time()-start} seconds.')
             
