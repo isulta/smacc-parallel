@@ -5,7 +5,7 @@ ranks = comm.Get_size()
 
 import numpy as np
 import subhalo_mass_loss_model as SHMLM
-from itk import intersect1d_parallel_sorted, many_to_one_allranks, h5_write_dict_parallel, h5_write_dict, h5_read_dict, intersect1d_numba
+from itk import intersect1d_parallel_sorted, many_to_one_allranks_numba, h5_write_dict_parallel, h5_write_dict, h5_read_dict, intersect1d_numba
 import os
 import time
 import pygio
@@ -132,13 +132,13 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
 
             # Find host halo mass M for satellites.
             printr('Finding M for all ranks...'); start=time.time()
-            M = many_to_one_allranks(comm, rank, root, cc['tree_node_index'][satellites_mask], cc['tree_node_index'][centrals_mask], dtypes_cc_all['tree_node_index'], cc['infall_tree_node_mass'][centrals_mask], dtypes_cc_all['infall_tree_node_mass'])
+            M = many_to_one_allranks_numba(comm, rank, root, cc['tree_node_index'][satellites_mask], cc['tree_node_index'][centrals_mask], dtypes_cc_all['tree_node_index'], cc['infall_tree_node_mass'][centrals_mask], dtypes_cc_all['infall_tree_node_mass'])
             printr(f'Finished finding M for all ranks in {time.time()-start} seconds.')
             
             # Find parent halo mass Mlocal for satellites.
             if (step != steps[-1]) and useLocalHost:
                 printr('Finding Mlocal for all ranks...'); start=time.time()
-                Mlocal = many_to_one_allranks(comm, rank, root, cc['host_core'][satellites_mask], cc['core_tag'], dtypes_cc_all['core_tag'], cc[m_evolved_col(A, zeta)], dtypes_cc_all['infall_tree_node_mass'])
+                Mlocal = many_to_one_allranks_numba(comm, rank, root, cc['host_core'][satellites_mask], cc['core_tag'], dtypes_cc_all['core_tag'], cc[m_evolved_col(A, zeta)], dtypes_cc_all['infall_tree_node_mass'])
                 printr(f'Finished finding Mlocal for all ranks in {time.time()-start} seconds.')
             
             # Initialize mass of new satellites
