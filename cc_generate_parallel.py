@@ -5,7 +5,7 @@ ranks = comm.Get_size()
 
 import numpy as np
 import subhalo_mass_loss_model as SHMLM
-from itk import intersect1d_parallel, many_to_one_allranks, h5_write_dict_parallel, h5_write_dict, h5_read_dict
+from itk import intersect1d_parallel_sorted, many_to_one_allranks, h5_write_dict_parallel, h5_write_dict, h5_read_dict, intersect1d_numba
 import os
 import time
 import pygio
@@ -103,23 +103,27 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
             # Set m_evolved of all satellites that have core_tag match on prev step to next_m_evolved of prev step.
             printr('cc_prev m_evolved matching for all ranks...'); start=time.time()
             # cc_prev m_evolved matching on local rank first
-            _, idx1_local, idx2_local = np.intersect1d( cc['core_tag'][satellites_mask], cc_prev['core_tag'], return_indices=True )
-            cc[m_evolved_col(A, zeta)][ np.flatnonzero(satellites_mask)[idx1_local] ] = cc_prev[m_evolved_col(A, zeta, next=True)][idx2_local]
+            idxsrt_sat = np.argsort(cc['core_tag'][satellites_mask])
+            idxsrt_prev = np.argsort(cc_prev['core_tag'])
+
+            idx1_local, idx2_local = intersect1d_numba(cc['core_tag'][satellites_mask][idxsrt_sat], cc_prev['core_tag'][idxsrt_prev])
+            cc[m_evolved_col(A, zeta)][ np.flatnonzero(satellites_mask)[idxsrt_sat][idx1_local] ] = cc_prev[m_evolved_col(A, zeta, next=True)][idxsrt_prev][idx2_local]
 
             unmatched_satellites_idx = np.ones(np.sum(satellites_mask), dtype=np.bool)
             unmatched_satellites_idx[idx1_local] = False
-            unmatched_satellites_idx = np.flatnonzero(satellites_mask)[unmatched_satellites_idx]
+            unmatched_satellites_idx = np.flatnonzero(satellites_mask)[idxsrt_sat][unmatched_satellites_idx]
 
             unmatched_prev_idx = np.ones(len(cc_prev['core_tag']), dtype=np.bool)
             unmatched_prev_idx[idx2_local] = False
+            unmatched_prev_idx = idxsrt_prev[unmatched_prev_idx]
 
             for root in range(ranks):
-                idx1, data = intersect1d_parallel(comm, rank, root,
-                                                    ( cc['core_tag'][unmatched_satellites_idx] if rank==root else None ), 
-                                                    ( cc_prev['core_tag'][unmatched_prev_idx] if rank!=root else np.array([], dtype=dtypes_cc_all['core_tag']) ), 
-                                                    dtypes_cc_all['core_tag'], 
-                                                    ( cc_prev[m_evolved_col(A, zeta, next=True)][unmatched_prev_idx] if rank!=root else np.array([], dtype=dtypes_cc_all['infall_tree_node_mass']) ), 
-                                                    dtypes_cc_all['infall_tree_node_mass'])
+                idx1, data = intersect1d_parallel_sorted(comm, rank, root,
+                                                            ( cc['core_tag'][unmatched_satellites_idx] if rank==root else None ), 
+                                                            ( cc_prev['core_tag'][unmatched_prev_idx] if rank!=root else np.array([], dtype=dtypes_cc_all['core_tag']) ), 
+                                                            dtypes_cc_all['core_tag'], 
+                                                            ( cc_prev[m_evolved_col(A, zeta, next=True)][unmatched_prev_idx] if rank!=root else np.array([], dtype=dtypes_cc_all['infall_tree_node_mass']) ), 
+                                                            dtypes_cc_all['infall_tree_node_mass'])
                 if rank == root:
                     cc[m_evolved_col(A, zeta)][ unmatched_satellites_idx[idx1] ] = data
                 printr(f'Found {len(idx1) if rank==root else None} satellite core_tag matches in cc_prev.', root)
