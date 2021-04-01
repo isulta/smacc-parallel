@@ -110,12 +110,15 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
             unmatched_satellites_idx[idx1_local] = False
             unmatched_satellites_idx = np.flatnonzero(satellites_mask)[unmatched_satellites_idx]
 
+            unmatched_prev_idx = np.ones(len(cc_prev['core_tag']), dtype=np.bool)
+            unmatched_prev_idx[idx2_local] = False
+
             for root in range(ranks):
                 idx1, data = intersect1d_parallel(comm, rank, root,
                                                     ( cc['core_tag'][unmatched_satellites_idx] if rank==root else None ), 
-                                                    ( cc_prev['core_tag'] if rank!=root else np.array([], dtype=dtypes_cc_all['core_tag']) ), 
+                                                    ( cc_prev['core_tag'][unmatched_prev_idx] if rank!=root else np.array([], dtype=dtypes_cc_all['core_tag']) ), 
                                                     dtypes_cc_all['core_tag'], 
-                                                    ( cc_prev[m_evolved_col(A, zeta, next=True)] if rank!=root else np.array([], dtype=dtypes_cc_all['infall_tree_node_mass']) ), 
+                                                    ( cc_prev[m_evolved_col(A, zeta, next=True)][unmatched_prev_idx] if rank!=root else np.array([], dtype=dtypes_cc_all['infall_tree_node_mass']) ), 
                                                     dtypes_cc_all['infall_tree_node_mass'])
                 if rank == root:
                     cc[m_evolved_col(A, zeta)][ unmatched_satellites_idx[idx1] ] = data
