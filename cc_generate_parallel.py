@@ -5,7 +5,7 @@ ranks = comm.Get_size()
 
 import numpy as np
 import subhalo_mass_loss_model as SHMLM
-from itk import intersect1d_parallel, many_to_one_parallel, many_to_one, h5_write_dict_parallel, h5_write_dict, h5_read_dict
+from itk import intersect1d_parallel, many_to_one_parallel, many_to_one_allranks, h5_write_dict_parallel, h5_write_dict, h5_read_dict
 import os
 import time
 import pygio
@@ -125,6 +125,7 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
 
             # Find host halo mass M for satellites.
             printr('Finding M for all ranks...'); start=time.time()
+            '''
             M = np.zeros(np.sum(satellites_mask), dtype=dtypes_cc_all['infall_tree_node_mass'])
             # Match on local rank first
             isin_local = np.isin(cc['tree_node_index'][satellites_mask], cc['tree_node_index'][centrals_mask])
@@ -143,6 +144,8 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
                 if rank == root:
                     M[~isin_local] = Data.copy()
                 comm.Barrier()
+            '''
+            M = many_to_one_allranks(comm, rank, root, cc['tree_node_index'][satellites_mask], cc['tree_node_index'][centrals_mask], dtypes_cc_all['tree_node_index'], cc['infall_tree_node_mass'][centrals_mask], dtypes_cc_all['infall_tree_node_mass'])
             printr(f'Finished finding M for all ranks in {time.time()-start} seconds.')
             
             # Find parent halo mass Mlocal for satellites.
