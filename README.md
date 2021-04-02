@@ -6,7 +6,7 @@ Running in a [conda](https://conda.io/projects/conda/en/latest/index.html) envir
 The following packages are also required:
 - [pygio](https://xgitlab.cels.anl.gov/hacc/genericio/-/tree/master/new_python)
 - [itk](https://github.com/isulta/itk)
-- HDF5 and H5py (both must be built with [parallel support enabled](https://docs.h5py.org/en/stable/mpi.html))
+- HDF5 and H5py (both must be built with [parallel support enabled](https://docs.h5py.org/en/stable/mpi.html#building-against-parallel-hdf5))
 - Astropy
 - Numpy
 - Matplotlib
