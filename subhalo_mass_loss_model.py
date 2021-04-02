@@ -33,7 +33,6 @@ BOXSIZE = itk.SIMPARAMS[SIMNAME]['Vi']
 OMEGA_M = itk.SIMPARAMS[SIMNAME]['OMEGA_M']
 OMEGA_L = itk.SIMPARAMS[SIMNAME]['OMEGA_L']
 LITTLEH = itk.SIMPARAMS[SIMNAME]['h']
-OMEGA_0 = OMEGA_M
 
 cc_data_dir = os.path.dirname(cc_input_template)
 cc_input_list = natsorted(glob.glob(cc_input_template))
@@ -46,16 +45,17 @@ step2lookback = {step : cosmoFLCDM.lookback_time(z).value*LITTLEH for step, z in
 
 def E(z):
     """E(z) = H(z)/H0"""
-    return (OMEGA_M*((1+z)**3) + OMEGA_L)**0.5
+    return ( OMEGA_M * (1+z)**3 + OMEGA_L )**0.5
 
-def Omega(z):
-    return OMEGA_0 * (1+z)**3 / E(z)**2
+def Omega_m(z):
+    return OMEGA_M * (1+z)**3 / E(z)**2
 
 def x(z):
-    return Omega(z) - 1
+    return Omega_m(z) - 1
 
 def delta_vir(z):
-    return 18*np.pi**2 + 82*x(z) - 39*x(z)**2
+    xz = x(z)
+    return 18*np.pi**2 + 82*xz - 39*xz**2
 
 def tau(z, A):
     """returns in units h^-1 Gyr"""
