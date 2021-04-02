@@ -4,7 +4,7 @@ import os
 import glob
 from natsort import natsorted
 import itk
-from astropy.cosmology import FlatLambdaCDM
+from scipy.integrate import quad
 
 # Load input parameters from `input_params.yaml`
 with open( os.path.join(os.path.dirname(__file__), 'input_params.yaml'), 'r' ) as f:
@@ -12,10 +12,6 @@ with open( os.path.join(os.path.dirname(__file__), 'input_params.yaml'), 'r' ) a
 
 SIMNAME = INPUTPARAMS['SIMNAME']
 DELTATFACTOR = INPUTPARAMS['DELTATFACTOR']
-Tcmb0 = INPUTPARAMS['Tcmb0']
-Neff = INPUTPARAMS['Neff']
-m_nu = INPUTPARAMS['m_nu']
-Ob0 = INPUTPARAMS['Ob0']
 zarr = INPUTPARAMS['zarr']
 cc_input_template = INPUTPARAMS['cc_input_template']
 cc_output_dir = INPUTPARAMS['cc_output_dir']
@@ -38,10 +34,12 @@ cc_data_dir = os.path.dirname(cc_input_template)
 cc_input_list = natsorted(glob.glob(cc_input_template))
 steps = [int(f.replace(cc_input_template.split('*')[0], '').replace(cc_input_template.split('*')[1], '')) for f in cc_input_list]
 
-cosmoFLCDM = FlatLambdaCDM(H0=LITTLEH*100, Om0=OMEGA_M,  Tcmb0=Tcmb0, Neff=Neff, m_nu=m_nu, Ob0=Ob0)
-
-step2z = {step:z for step, z in zip(steps, zarr)}
-step2lookback = {step : cosmoFLCDM.lookback_time(z).value*LITTLEH for step, z in zip(steps, zarr)} #in h^-1 Gyr
+def lookback_time(z):
+    """
+    Returns in units h^-1 Gyr.
+    See https://ned.ipac.caltech.edu/level5/Hogg/Hogg10.html.
+    """
+    return itk.THUBBLE * quad( lambda z_: 1/(E(z_)*(1+z_)), 0, z )[0]
 
 def E(z):
     """E(z) = H(z)/H0"""
@@ -71,3 +69,6 @@ def m_evolved(m0, M0, step, step_prev, A, zeta, dtFactorFlag=False):
         return m0 * np.exp( -delta_t/tau(z,A) )
     else:
         return m0 * ( 1 + zeta * (m0/M0)**zeta * delta_t/tau(z,A) )**(-1/zeta)
+
+step2z = {step:z for step, z in zip(steps, zarr)}
+step2lookback = {step : lookback_time(z) for step, z in zip(steps, zarr)} #in h^-1 Gyr
