@@ -8,6 +8,7 @@ import subhalo_mass_loss_model as SHMLM
 from itk import intersect1d_parallel_sorted, many_to_one_allranks_numba, h5_write_dict_parallel, h5_write_dict, h5_read_dict, intersect1d_numba
 import os
 import time
+from datetime import datetime, timedelta
 import pygio
 
 A, zeta = SHMLM.AFID, SHMLM.ZETAFID
@@ -41,7 +42,7 @@ dtypes_cc_all = {
 
 def printr(s, root=0):
     if rank == root:
-        print(f'rank {root}: {s}', flush=True)
+        print(f'[{datetime.now()}] rank {root}: {s}', flush=True)
     comm.Barrier()
 
 def vars_cc(step):
@@ -176,4 +177,6 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
         printr(f'Finished step {step} in {time.time()-start_step} seconds.\n')
 
 if __name__ == '__main__':
+    printr(f'Beginning SMACC.'); start_smacc = time.time()
     create_core_catalog_mevolved(SHMLM.writeOutputFlag, SHMLM.useLocalHost, SHMLM.save_cc_prev, SHMLM.resume_smacc)
+    printr(f'Finished SMACC in {timedelta(seconds=time.time()-start_smacc)}')
