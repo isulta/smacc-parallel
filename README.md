@@ -19,12 +19,12 @@ Next, set the [Input parameters](#Input-parameters) in `input_params.yaml`.
 Note that the above command to start the parallel MPI processes may be different depending on the system.
 Sample scripts to run smacc-parallel on various HPC systems are provided in `job_submission_scripts/`.
 
-For each snapshot, smacc-parallel will save the output HDF5 Core Catalog as an `.corepropertiesextend.hdf5` file with
+For each snapshot, smacc-parallel will save the output HDF5 Core Catalog as a `.corepropertiesextend.hdf5` file with
 - a limited set of columns from the input GenericIO Core Catalog (see [Data Columns](#Data-Columns) for fine-tuning which columns are written)
 - `m_evolved_{A}_{zeta}`: modeled satellite core mass column (for central cores, this column has value 0)
 
 ## Input parameters
-All parameters for smacc-parallel are defined in `input_params.yaml`. They are described below.
+All parameters for smacc-parallel are defined in `input_params.yaml`:
 
 | **Simulation** |  |
 |-|-|
@@ -36,7 +36,7 @@ All parameters for smacc-parallel are defined in `input_params.yaml`. They are d
 | `useLocalHost` | If `True`, smacc-parallel will use the immediate parent (sub)halo mass for M in the mass model. If `False`, smacc-parallel will use the host halo mass for M. |
 | `DELTATFACTOR` | Fraction of the time between the snapshot at which infall is detected for a core and the preceding snapshot, over which to compute the initial mass evolution of the new satellite. |
 | **File Input/Output** |  |
-| `cc_input_template` | File path of GenericIO Core Catalog (`.coreproperties`) header files. Use an asterisk in place of the snapshot number. smacc-parallel will automatically get all snapshots. |
+| `cc_input_template` | File path of GenericIO Core Catalog (`.coreproperties`) header files. Use an asterisk in place of the snapshot number. smacc-parallel will automatically create a list of all snapshots. |
 | `cc_output_dir` | Directory to save output Core Catalog files with `m_evolved_{A}_{zeta}` column (`.corepropertiesextend.hdf5`) |
 | `writeOutputFlag` | If `True`, smacc-parallel will save output Core Catalog files at each snapshot to `cc_output_dir`. |
 | `save_cc_prev` | If `True`, smacc-parallel will also save "resume-files" (`.ccprev.hdf5`) at each snapshot to `cc_output_dir`. This allows smacc-parallel to resume from a later snapshot instead of having to restart if a run gets interrupted (See *Resume SMACC*). |
@@ -50,8 +50,8 @@ Python 3 is required (smacc-parallel has been tested for Python 3.8.5).
 Running in a [conda](https://conda.io/projects/conda/en/latest/index.html) environment is recommended.
 
 The following packages are also required:
-- [pygio](https://xgitlab.cels.anl.gov/hacc/genericio/-/tree/master/new_python)
 - [itk](https://github.com/isulta/itk)
+- [pygio](https://xgitlab.cels.anl.gov/hacc/genericio/-/tree/master/new_python)
 - HDF5 and H5py (both must be built with [parallel support enabled](https://docs.h5py.org/en/stable/mpi.html#building-against-parallel-hdf5))
 - Astropy
 - Numpy
