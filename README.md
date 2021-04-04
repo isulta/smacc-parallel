@@ -29,7 +29,6 @@ All parameters for smacc-parallel are defined in `input_params.yaml`:
 | **Simulation** |  |
 |-|-|
 | `SIMNAME` | Set to `LJ` for Last Journey, `SV` for Last Journey-SV, `HM` for Last Journey-HM, `AQ` for AlphaQ, or `FP` for Farpoint. (See [Other Simulations](#Other-Simulations) if using a simulation not listed here.) |
-| `zarr` | List of redshifts of the snapshots (ascending order in snapshot) |
 | **Mass Loss Model** |  |
 | `AFID` | A mass model parameter |
 | `ZETAFID` | ζ mass model parameter |
@@ -80,3 +79,8 @@ The following columns are required for the mass model, and **must** be listed in
 To use smacc-parallel with a simulation not listed above, assign a key and add the key and simulation/cosmological parameters to `simulationParams.yaml` in `itk`.
 smacc-parallel will then import the parameters if `SIMNAME` is set to the new key.
 Note that `itk` only supports simulations with a cosmology close to the current ΛCDM best-fit cosmology; `itk` assumes Ω<sub>r,0</sub> = Ω<sub>k,0</sub> = 0.
+
+By default, smacc-parallel uses the step number-to-redshift formula given below, which is valid for the HACC simulations listed above (Last Journey, LJ-SV, LJ-HM, AlphaQ, and Farpoint).
+If using a simulation with a different step-to-redshift formula, the function `redshift` in `itk.py` must be updated.
+
+![step number-to-redshift formula](steptozformula.png)

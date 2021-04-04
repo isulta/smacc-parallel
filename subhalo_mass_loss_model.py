@@ -12,7 +12,6 @@ with open( os.path.join(os.path.dirname(__file__), 'input_params.yaml'), 'r' ) a
 
 SIMNAME = INPUTPARAMS['SIMNAME']
 DELTATFACTOR = INPUTPARAMS['DELTATFACTOR']
-zarr = INPUTPARAMS['zarr']
 cc_input_template = INPUTPARAMS['cc_input_template']
 cc_output_dir = INPUTPARAMS['cc_output_dir']
 AFID = INPUTPARAMS['AFID']
@@ -60,8 +59,10 @@ def tau(z, A):
     return 1.628/A * ( delta_vir(z)/delta_vir(0) )**(-0.5) * E(z)**(-1)
 
 def m_evolved(m0, M0, step, step_prev, A, zeta, dtFactorFlag=False):
-    z = step2z[step]
-    delta_t = step2lookback[step_prev] - step2lookback[step]
+    z = itk.redshift(step)
+    z_prev = itk.redshift(step_prev)
+    delta_t = lookback_time(z_prev) - lookback_time(z)
+    
     if dtFactorFlag:
         delta_t *= DELTATFACTOR
 
@@ -69,6 +70,3 @@ def m_evolved(m0, M0, step, step_prev, A, zeta, dtFactorFlag=False):
         return m0 * np.exp( -delta_t/tau(z,A) )
     else:
         return m0 * ( 1 + zeta * (m0/M0)**zeta * delta_t/tau(z,A) )**(-1/zeta)
-
-step2z = {step:z for step, z in zip(steps, zarr)}
-step2lookback = {step : lookback_time(z) for step, z in zip(steps, zarr)} #in h^-1 Gyr
