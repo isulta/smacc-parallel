@@ -19,6 +19,9 @@ ZETAFID = INPUTPARAMS['ZETAFID']
 writeOutputFlag = INPUTPARAMS['writeOutputFlag']
 useLocalHost = INPUTPARAMS['useLocalHost']
 save_cc_prev = INPUTPARAMS['save_cc_prev']
+extra_columns = INPUTPARAMS['extra_columns']
+extra_columns_dtypes = INPUTPARAMS['extra_columns_dtypes']
+steps_to_read_extra_columns = INPUTPARAMS['steps_to_read_extra_columns']
 resume_smacc = INPUTPARAMS['resume_smacc']
 resume_dir = INPUTPARAMS['resume_dir']
 resume_step = INPUTPARAMS['resume_step']
@@ -32,6 +35,15 @@ LITTLEH = itk.SIMPARAMS[SIMNAME]['h']
 cc_data_dir = os.path.dirname(cc_input_template)
 cc_input_list = natsorted(glob.glob(cc_input_template))
 steps = [int(f.replace(cc_input_template.split('*')[0], '').replace(cc_input_template.split('*')[1], '')) for f in cc_input_list]
+
+# Data Columns
+vars_cc_min = ['core_tag', 'tree_node_index', 'infall_tree_node_mass', 'central', 'host_core']
+vars_cc_all = list(set( vars_cc_min + extra_columns ))
+dtypes_cc_all = {'core_tag': np.int64,'tree_node_index': np.int64,'infall_tree_node_mass': np.float32,'central': np.int32,'host_core': np.int64}
+dtype_keys = {'i 32': np.int32, 'i 64': np.int64, 'f 32': np.float32}
+for k,dt in zip(extra_columns, extra_columns_dtypes):
+    dtypes_cc_all[k] = dtype_keys[dt]
+steps_to_read_extra_columns = steps if steps_to_read_extra_columns=='all' else steps_to_read_extra_columns
 
 def lookback_time(z):
     """

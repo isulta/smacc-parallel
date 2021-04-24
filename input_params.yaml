@@ -15,10 +15,12 @@ cc_output_dir: /cosmo/scratch/isultan/Farpoint/output
 writeOutputFlag: True
 save_cc_prev: True
 
+# Data Columns
+extra_columns: [fof_halo_tag, infall_fof_halo_mass]
+extra_columns_dtypes: [i 64, f 32]
+steps_to_read_extra_columns: [247, 499]
+
 # Resume SMACC
 resume_smacc: False
 resume_dir: /cosmo/scratch/isultan/Farpoint/output/output_19374
 resume_step: 50
-# SMACC will start from step `resume_step` if `resume_smacc` is True. SMACC will start from the first step otherwise.
-# `resume_dir` must contain resume-files N.*.ccprev.hdf5 for step N which immediately precedes step `resume_step`.
-# The resume-files must have been written with the same number of ranks/machine topology as the current run.

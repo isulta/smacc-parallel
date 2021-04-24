@@ -14,31 +14,9 @@ import pygio
 A, zeta = SHMLM.AFID, SHMLM.ZETAFID
 steps = SHMLM.steps
 
-vars_cc_all = [
-    'fof_halo_tag',
-    'infall_fof_halo_mass',
-    'core_tag',
-    'tree_node_index',
-    'infall_tree_node_mass',
-    'central',
-    'host_core'
-]
-vars_cc_min = [
-    'core_tag',
-    'tree_node_index',
-    'infall_tree_node_mass',
-    'central',
-    'host_core'
-]
-dtypes_cc_all = {
-    'fof_halo_tag': np.int64,
-    'infall_fof_halo_mass': np.float32,
-    'core_tag': np.int64,
-    'tree_node_index': np.int64,
-    'infall_tree_node_mass': np.float32,
-    'central': np.int32,
-    'host_core': np.int64
-}
+vars_cc_all = SHMLM.vars_cc_all
+vars_cc_min = SHMLM.vars_cc_min
+dtypes_cc_all = SHMLM.dtypes_cc_all
 
 def printr(s, root=0):
     if rank == root:
@@ -46,7 +24,7 @@ def printr(s, root=0):
     comm.Barrier()
 
 def vars_cc(step):
-    if step==499 or step==247:
+    if step in SHMLM.steps_to_read_extra_columns:
         return vars_cc_all
     else:
         return vars_cc_min
