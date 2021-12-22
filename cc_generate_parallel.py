@@ -113,19 +113,20 @@ def create_core_catalog_mevolved(writeOutputFlag, useLocalHost, save_cc_prev, re
             printr('Finding M for all ranks...'); start=time.time()
             M = many_to_one_allranks_numba(comm, rank, root, cc['tree_node_index'][satellites_mask], cc['tree_node_index'][centrals_mask], dtypes_cc_all['tree_node_index'], cc['infall_tree_node_mass'][centrals_mask], dtypes_cc_all['infall_tree_node_mass'])
             printr(f'Finished finding M for all ranks in {time.time()-start} seconds.')
-            
-            # Find parent halo mass Mlocal for satellites.
-            if (step != steps[-1]) and useLocalHost:
-                printr('Finding Mlocal for all ranks...'); start=time.time()
-                Mlocal = many_to_one_allranks_numba(comm, rank, root, cc['host_core'][satellites_mask], cc['core_tag'], dtypes_cc_all['core_tag'], cc[m_evolved_col(A, zeta)], dtypes_cc_all['infall_tree_node_mass'])
-                printr(f'Finished finding Mlocal for all ranks in {time.time()-start} seconds.')
-            
+
             # Initialize mass of new satellites
             printr('SHMLM (new satellites)...'); start=time.time()
             initMask = cc[m_evolved_col(A, zeta)][satellites_mask] == 0
             minfall = cc['infall_tree_node_mass'][satellites_mask][initMask]
             cc[m_evolved_col(A, zeta)][ np.flatnonzero(satellites_mask)[initMask] ] = SHMLM.m_evolved(m0=minfall, M0=M[initMask], step=step, step_prev=steps[steps.index(step)-1], A=A, zeta=zeta, dtFactorFlag=True)
             printr(f'Finished SHMLM (new satellites) in {time.time()-start} seconds.')
+
+            # Find parent halo mass Mlocal for satellites.
+            if (step != steps[-1]) and useLocalHost:
+                printr('Finding Mlocal for all ranks...'); start=time.time()
+                Mlocal = many_to_one_allranks_numba(comm, rank, root, cc['host_core'][satellites_mask], cc['core_tag'], dtypes_cc_all['core_tag'], cc[m_evolved_col(A, zeta)], dtypes_cc_all['infall_tree_node_mass'])
+                printr(f'Finished finding Mlocal for all ranks in {time.time()-start} seconds.')
+            
         if writeOutputFlag:
             # Write cc to disk
             fn = os.path.join(SHMLM.cc_output_dir, f'{step}.corepropertiesextend.hdf5')
